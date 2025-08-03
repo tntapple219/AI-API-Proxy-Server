@@ -1,0 +1,804 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 AI API 代理監控面板</title>
+    <style>
+        /* Material Design 3 Dark Theme Variables */
+        :root {
+            /* Surface Colors */
+            --md-sys-color-surface: #121212;
+            --md-sys-color-surface-variant: #1E1E1E;
+            --md-sys-color-surface-container-lowest: #0A0A0A;
+            --md-sys-color-surface-container-low: #161616;
+            --md-sys-color-surface-container: #1A1A1A;
+            --md-sys-color-surface-container-high: #242424;
+            --md-sys-color-surface-container-highest: #2B2B2B;
+            
+            /* Primary Colors */
+            --md-sys-color-primary: #A8C7FA;
+            --md-sys-color-primary-container: #1B3A5C;
+            --md-sys-color-on-primary: #0A1929;
+            --md-sys-color-on-primary-container: #D3E4FD;
+            
+            /* Secondary Colors */
+            --md-sys-color-secondary: #BCC7DB;
+            --md-sys-color-secondary-container: #354762;
+            --md-sys-color-on-secondary: #1A2332;
+            --md-sys-color-on-secondary-container: #D8E3F8;
+            
+            /* Tertiary Colors */
+            --md-sys-color-tertiary: #D0BCFF;
+            --md-sys-color-tertiary-container: #4F378B;
+            --md-sys-color-on-tertiary: #2B1F54;
+            
+            /* Error Colors */
+            --md-sys-color-error: #F2B8B5;
+            --md-sys-color-error-container: #8C1D18;
+            --md-sys-color-on-error: #601410;
+            --md-sys-color-on-error-container: #F9DEDC;
+            
+            /* Success Colors */
+            --md-sys-color-success: #A6D4A1;
+            --md-sys-color-success-container: #0F5132;
+            --md-sys-color-on-success: #002114;
+            --md-sys-color-on-success-container: #C6F0C2;
+            
+            /* Warning Colors */
+            --md-sys-color-warning: #FFB951;
+            --md-sys-color-warning-container: #8B4000;
+            --md-sys-color-on-warning: #2D1B00;
+            --md-sys-color-on-warning-container: #FFDEAB;
+            
+            /* Text Colors */
+            --md-sys-color-on-surface: #E6E1E5;
+            --md-sys-color-on-surface-variant: #C4C7C5;
+            --md-sys-color-outline: #8E918F;
+            --md-sys-color-outline-variant: #44474E;
+            
+            /* Typography Scale */
+            --md-sys-typescale-display-large-size: 57px;
+            --md-sys-typescale-display-large-line-height: 64px;
+            --md-sys-typescale-display-large-weight: 400;
+            
+            --md-sys-typescale-headline-large-size: 32px;
+            --md-sys-typescale-headline-large-line-height: 40px;
+            --md-sys-typescale-headline-large-weight: 400;
+            
+            --md-sys-typescale-title-large-size: 22px;
+            --md-sys-typescale-title-large-line-height: 28px;
+            --md-sys-typescale-title-large-weight: 400;
+            
+            --md-sys-typescale-title-medium-size: 16px;
+            --md-sys-typescale-title-medium-line-height: 24px;
+            --md-sys-typescale-title-medium-weight: 500;
+            
+            --md-sys-typescale-body-large-size: 16px;
+            --md-sys-typescale-body-large-line-height: 24px;
+            --md-sys-typescale-body-large-weight: 400;
+            
+            --md-sys-typescale-body-medium-size: 14px;
+            --md-sys-typescale-body-medium-line-height: 20px;
+            --md-sys-typescale-body-medium-weight: 400;
+            
+            --md-sys-typescale-body-small-size: 12px;
+            --md-sys-typescale-body-small-line-height: 16px;
+            --md-sys-typescale-body-small-weight: 400;
+            
+            --md-sys-typescale-label-large-size: 14px;
+            --md-sys-typescale-label-large-line-height: 20px;
+            --md-sys-typescale-label-large-weight: 500;
+            
+            --md-sys-typescale-label-medium-size: 12px;
+            --md-sys-typescale-label-medium-line-height: 16px;
+            --md-sys-typescale-label-medium-weight: 500;
+            
+            --md-sys-typescale-label-small-size: 11px;
+            --md-sys-typescale-label-small-line-height: 16px;
+            --md-sys-typescale-label-small-weight: 500;
+            
+            /* Elevation */
+            --md-sys-elevation-level0: none;
+            --md-sys-elevation-level1: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-level2: 0px 1px 2px 0px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-level3: 0px 1px 3px 0px rgba(0, 0, 0, 0.3), 0px 4px 8px 3px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-level4: 0px 2px 3px 0px rgba(0, 0, 0, 0.3), 0px 6px 10px 4px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-level5: 0px 4px 4px 0px rgba(0, 0, 0, 0.3), 0px 8px 12px 6px rgba(0, 0, 0, 0.15);
+            
+            /* Shape */
+            --md-sys-shape-corner-none: 0px;
+            --md-sys-shape-corner-extra-small: 4px;
+            --md-sys-shape-corner-small: 8px;
+            --md-sys-shape-corner-medium: 12px;
+            --md-sys-shape-corner-large: 16px;
+            --md-sys-shape-corner-extra-large: 28px;
+            
+            /* Motion */
+            --md-sys-motion-duration-short1: 50ms;
+            --md-sys-motion-duration-short2: 100ms;
+            --md-sys-motion-duration-short3: 150ms;
+            --md-sys-motion-duration-short4: 200ms;
+            --md-sys-motion-duration-medium1: 250ms;
+            --md-sys-motion-duration-medium2: 300ms;
+            --md-sys-motion-duration-medium3: 350ms;
+            --md-sys-motion-duration-medium4: 400ms;
+            --md-sys-motion-duration-long1: 450ms;
+            --md-sys-motion-duration-long2: 500ms;
+            --md-sys-motion-duration-long3: 550ms;
+            --md-sys-motion-duration-long4: 600ms;
+            
+            --md-sys-motion-easing-linear: cubic-bezier(0, 0, 1, 1);
+            --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+            --md-sys-motion-easing-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
+            --md-sys-motion-easing-standard-decelerate: cubic-bezier(0, 0, 0, 1);
+            --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+            --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+            --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            min-height: 100vh;
+            padding: 24px;
+            line-height: var(--md-sys-typescale-body-large-line-height);
+            font-size: var(--md-sys-typescale-body-large-size);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .header h1 {
+            font-size: var(--md-sys-typescale-headline-large-size);
+            line-height: var(--md-sys-typescale-headline-large-line-height);
+            font-weight: var(--md-sys-typescale-headline-large-weight);
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 8px;
+            letter-spacing: 0.25px;
+        }
+
+        .header p {
+            font-size: var(--md-sys-typescale-body-large-size);
+            line-height: var(--md-sys-typescale-body-large-line-height);
+            color: var(--md-sys-color-on-surface-variant);
+            letter-spacing: 0.5px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--md-sys-color-surface-container);
+            padding: 24px;
+            border-radius: var(--md-sys-shape-corner-large);
+            box-shadow: var(--md-sys-elevation-level1);
+            text-align: center;
+            transition: all var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--md-sys-elevation-level3);
+            border-color: var(--md-sys-color-outline);
+        }
+
+        .card-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .card-value {
+            font-size: var(--md-sys-typescale-title-large-size);
+            line-height: var(--md-sys-typescale-title-large-line-height);
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .card-label {
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: var(--md-sys-typescale-body-medium-size);
+            line-height: var(--md-sys-typescale-body-medium-line-height);
+            letter-spacing: 0.25px;
+        }
+
+        .platforms {
+            display: grid;
+            gap: 24px;
+        }
+
+        .platform {
+            background: var(--md-sys-color-surface-container);
+            border-radius: var(--md-sys-shape-corner-large);
+            padding: 24px;
+            box-shadow: var(--md-sys-elevation-level1);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            transition: all var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+        }
+
+        .platform:hover {
+            box-shadow: var(--md-sys-elevation-level2);
+            border-color: var(--md-sys-color-outline);
+        }
+
+        .platform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .platform-name {
+            font-size: var(--md-sys-typescale-title-large-size);
+            line-height: var(--md-sys-typescale-title-large-line-height);
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            letter-spacing: 0.15px;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: var(--md-sys-shape-corner-extra-large);
+            font-size: var(--md-sys-typescale-label-medium-size);
+            line-height: var(--md-sys-typescale-label-medium-line-height);
+            font-weight: var(--md-sys-typescale-label-medium-weight);
+            letter-spacing: 0.5px;
+            transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+        }
+
+        .status-healthy { 
+            background: var(--md-sys-color-success-container);
+            color: var(--md-sys-color-on-success-container);
+        }
+        
+        .status-unhealthy { 
+            background: var(--md-sys-color-error-container);
+            color: var(--md-sys-color-on-error-container);
+        }
+        
+        .status-unknown { 
+            background: var(--md-sys-color-warning-container);
+            color: var(--md-sys-color-on-warning-container);
+        }
+
+        .platform-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 16px;
+            background: var(--md-sys-color-surface-container-high);
+            border-radius: var(--md-sys-shape-corner-medium);
+            transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .stat:hover {
+            background: var(--md-sys-color-surface-container-highest);
+            border-color: var(--md-sys-color-outline);
+        }
+
+        .stat-value {
+            font-size: var(--md-sys-typescale-title-medium-size);
+            line-height: var(--md-sys-typescale-title-medium-line-height);
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 4px;
+            /* Handle long URLs */
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+
+        .stat-label {
+            font-size: var(--md-sys-typescale-body-small-size);
+            line-height: var(--md-sys-typescale-body-small-line-height);
+            color: var(--md-sys-color-on-surface-variant);
+            letter-spacing: 0.4px;
+        }
+
+        .keys-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+        }
+
+        .key-card {
+            background: var(--md-sys-color-surface-container-high);
+            border-radius: var(--md-sys-shape-corner-medium);
+            padding: 16px;
+            transition: all var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+            border-left: 4px solid var(--md-sys-color-outline-variant);
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        .key-card:hover {
+            background: var(--md-sys-color-surface-container-highest);
+            box-shadow: var(--md-sys-elevation-level1);
+            border-color: var(--md-sys-color-outline);
+        }
+
+        .key-card.healthy { 
+            border-left-color: var(--md-sys-color-success);
+        }
+        
+        .key-card.unhealthy { 
+            border-left-color: var(--md-sys-color-error);
+        }
+        
+        .key-card.unknown { 
+            border-left-color: var(--md-sys-color-warning);
+        }
+
+        .key-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .key-id {
+            font-family: 'Roboto Mono', 'Courier New', monospace;
+            background: var(--md-sys-color-surface-variant);
+            color: var(--md-sys-color-on-surface-variant);
+            padding: 6px 8px;
+            border-radius: var(--md-sys-shape-corner-extra-small);
+            font-size: var(--md-sys-typescale-body-small-size);
+            line-height: var(--md-sys-typescale-body-small-line-height);
+            /* Prevent overflow */
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex-shrink: 1;
+        }
+
+        .key-status {
+            font-size: var(--md-sys-typescale-label-small-size);
+            line-height: var(--md-sys-typescale-label-small-line-height);
+            font-weight: var(--md-sys-typescale-label-small-weight);
+            padding: 4px 8px;
+            border-radius: var(--md-sys-shape-corner-extra-large);
+            flex-shrink: 0;
+        }
+
+        .key-status.status-healthy {
+            background: var(--md-sys-color-success-container);
+            color: var(--md-sys-color-on-success-container);
+        }
+
+        .key-status.status-unhealthy {
+            background: var(--md-sys-color-error-container);
+            color: var(--md-sys-color-on-error-container);
+        }
+
+        .key-status.status-unknown {
+            background: var(--md-sys-color-warning-container);
+            color: var(--md-sys-color-on-warning-container);
+        }
+
+        .key-preview {
+            font-family: 'Roboto Mono', 'Courier New', monospace;
+            background: var(--md-sys-color-surface-variant);
+            color: var(--md-sys-color-on-surface-variant);
+            padding: 12px;
+            border-radius: var(--md-sys-shape-corner-extra-small);
+            margin-bottom: 12px;
+            font-size: var(--md-sys-typescale-body-medium-size);
+            line-height: var(--md-sys-typescale-body-medium-line-height);
+            /* Handle long keys properly */
+            word-break: break-all;
+            overflow-wrap: break-word;
+            max-width: 100%;
+            display: block;
+        }
+
+        .key-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            font-size: var(--md-sys-typescale-body-small-size);
+            line-height: var(--md-sys-typescale-body-small-line-height);
+        }
+
+        .key-details > div {
+            /* Handle long text in details */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .key-details strong {
+            color: var(--md-sys-color-on-surface);
+            font-weight: 500;
+        }
+
+        .error-message {
+            grid-column: span 2;
+            color: var(--md-sys-color-on-error-container);
+            background: var(--md-sys-color-error-container);
+            padding: 12px;
+            border-radius: var(--md-sys-shape-corner-extra-small);
+            margin-top: 12px;
+            font-size: var(--md-sys-typescale-body-small-size);
+            line-height: var(--md-sys-typescale-body-small-line-height);
+            /* Handle long error messages */
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            border: none;
+            width: 56px;
+            height: 56px;
+            border-radius: var(--md-sys-shape-corner-large);
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: var(--md-sys-elevation-level3);
+            transition: all var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-standard);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .refresh-btn:hover {
+            transform: scale(1.05);
+            box-shadow: var(--md-sys-elevation-level4);
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
+            box-shadow: var(--md-sys-elevation-level1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: var(--md-sys-typescale-title-medium-size);
+            line-height: var(--md-sys-typescale-title-medium-line-height);
+        }
+
+        .timestamp {
+            text-align: center;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-bottom: 24px;
+            font-size: var(--md-sys-typescale-body-medium-size);
+            line-height: var(--md-sys-typescale-body-medium-line-height);
+            letter-spacing: 0.25px;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spinning {
+            animation: spin var(--md-sys-motion-duration-long2) var(--md-sys-motion-easing-linear) infinite;
+        }
+
+        /* State layer effects for interactive elements */
+        .card::before,
+        .platform::before,
+        .stat::before,
+        .key-card::before,
+        .refresh-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: inherit;
+            background: var(--md-sys-color-on-surface);
+            opacity: 0;
+            transition: opacity var(--md-sys-motion-duration-short2) var(--md-sys-motion-easing-standard);
+            pointer-events: none;
+        }
+
+        .card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .platform {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .key-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .refresh-btn {
+            position: fixed;
+            overflow: hidden;
+        }
+
+        .card:hover::before {
+            opacity: 0.08;
+        }
+
+        .platform:hover::before {
+            opacity: 0.08;
+        }
+
+        .stat:hover::before {
+            opacity: 0.08;
+        }
+
+        .key-card:hover::before {
+            opacity: 0.08;
+        }
+
+        .refresh-btn:hover::before {
+            opacity: 0.08;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: 16px;
+            }
+            
+            .summary-cards {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 12px;
+            }
+            
+            .keys-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .platform-stats {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            }
+            
+            .key-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .key-id {
+                max-width: 100%;
+            }
+        }
+
+        /* Focus indicators for accessibility */
+        .refresh-btn:focus-visible {
+            outline: 2px solid var(--md-sys-color-primary);
+            outline-offset: 2px;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .card,
+            .platform,
+            .key-card {
+                border-width: 2px;
+            }
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 AI API 代理監控面板</h1>
+            <p>實時監控所有平台和 API Key 狀態</p>
+        </div>
+        <div class="timestamp" id="timestamp"></div>
+        <div id="loading" class="loading">
+            <div>🔄 載入中...</div>
+        </div>
+        <div id="content" style="display: none;">
+            <div class="summary-cards" id="summaryCards"></div>
+            <div class="platforms" id="platforms"></div>
+        </div>
+    </div>
+    <button class="refresh-btn" onclick="loadData()" id="refreshBtn">
+        🔄
+    </button>
+    <script>
+        async function loadData() {
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.classList.add('spinning');
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                renderData(data);
+            } catch (error) {
+                console.error('載入數據失敗:', error);
+                document.getElementById('loading').innerHTML = 
+                    '<div style="color: var(--md-sys-color-error);">❌ 載入失敗，請檢查服務狀態</div>';
+            } finally {
+                refreshBtn.classList.remove('spinning');
+            }
+        }
+        function renderData(data) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('content').style.display = 'block';
+            const timestamp = new Date(data.timestamp).toLocaleString('zh-TW');
+            document.getElementById('timestamp').textContent = `最後更新: ${timestamp}`;
+            renderSummaryCards(data.summary, data.overall_status);
+            renderPlatforms(data.platforms);
+        }
+        function renderSummaryCards(summary, overallStatus) {
+            const container = document.getElementById('summaryCards');
+            const cards = [
+                {
+                    icon: overallStatus === 'healthy' ? '✅' : '⚠️',
+                    value: overallStatus === 'healthy' ? '正常' : '異常',
+                    label: '整體狀態',
+                    class: overallStatus === 'healthy' ? 'status-healthy' : 'status-unhealthy'
+                },
+                {
+                    icon: '🏢',
+                    value: summary.total_platforms,
+                    label: '總平台數'
+                },
+                {
+                    icon: '🔑',
+                    value: summary.total_keys,
+                    label: '總 API Keys'
+                },
+                {
+                    icon: '💚',
+                    value: summary.healthy_keys,
+                    label: '健康 Keys'
+                }
+            ];
+            container.innerHTML = cards.map(card => `
+                <div class="card">
+                    <div class="card-icon">${card.icon}</div>
+                    <div class="card-value ${card.class || ''}">${card.value}</div>
+                    <div class="card-label">${card.label}</div>
+                </div>
+            `).join('');
+        }
+        function renderPlatforms(platforms) {
+            const container = document.getElementById('platforms');
+            container.innerHTML = Object.entries(platforms).map(([name, platform]) => `
+                <div class="platform">
+                    <div class="platform-header">
+                        <div class="platform-name">
+                            ${platform.display_name}
+                        </div>
+                        <div class="status-badge status-${platform.status}">
+                            ${platform.status === 'healthy' ? '✅ 健康' : '❌ 異常'}
+                        </div>
+                    </div>
+                    <div class="platform-stats">
+                        <div class="stat">
+                            <div class="stat-value">${platform.total_keys}</div>
+                            <div class="stat-label">總 Keys</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--md-sys-color-success)">${platform.healthy_keys}</div>
+                            <div class="stat-label">健康</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value" style="color: var(--md-sys-color-error)">${platform.unhealthy_keys}</div>
+                            <div class="stat-label">異常</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">${platform.base_url}</div>
+                            <div class="stat-label">服務地址</div>
+                        </div>
+                    </div>
+                    <div class="keys-grid">
+                        ${platform.keys.map(key => `
+                            <div class="key-card ${key.status}">
+                                <div class="key-header">
+                                    <div class="key-id" title="${key.key_id}">${key.key_id}</div>
+                                    <div class="key-status status-${key.status}">
+                                        ${key.status === 'healthy' ? '✅' : key.status === 'unhealthy' ? '❌' : '❓'}
+                                    </div>
+                                </div>
+                                <div class="key-preview" title="${key.key_preview}">${key.key_preview}</div>
+                                <div class="key-details">
+                                    <div><strong>狀態:</strong> ${key.status}</div>
+                                    <div><strong>響應時間:</strong> ${key.response_time_ms ? key.response_time_ms + 'ms' : 'N/A'}</div>
+                                    <div><strong>檢查時間:</strong> ${key.last_check ? new Date(key.last_check).toLocaleTimeString('zh-TW') : 'N/A'}</div>
+                                </div>
+                                ${key.error ? `<div class="error-message">❌ ${key.error}</div>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+        loadData();
+        setInterval(loadData, 30000);
+    </script>
+</body>
+</html>
