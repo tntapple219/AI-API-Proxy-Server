@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ service_name }} - {{ version }}</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&display=swap');
+        
+        /* 通用樣式 */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 800px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin: 0;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .header h2 {
+            font-size: 1.2em;
+            margin: 5px 0 0;
+            font-weight: 400;
+            transition: all 0.3s ease;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 20px 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            padding: 15px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+        }
+
+        .value {
+            transition: all 0.3s ease;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .footer a {
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* 主題切換按鈕 */
+        .theme-switcher {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            animation: slideInUp 0.8s ease-out 0.5s both;
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .theme-btn {
+            padding: 12px 16px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .theme-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        .theme-btn.active {
+            transform: scale(1.1);
+        }
+
+        /* Windows XP 主題 */
+        body.xp-theme {
+            background: linear-gradient(to bottom, #0054e3 0%, #0040dc 50%, #00359c 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body.xp-theme::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(255,255,255,0.06) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .xp-theme .container {
+            background: linear-gradient(135deg, #ece9d8 0%, #ddd6c6 100%);
+            border: 3px solid;
+            border-color: #f2f0e6 #aca899 #aca899 #f2f0e6;
+            border-radius: 0;
+            box-shadow: 
+                inset 1px 1px 0 rgba(255,255,255,0.8),
+                inset -1px -1px 0 rgba(0,0,0,0.2),
+                2px 2px 8px rgba(0,0,0,0.3);
+            color: #000;
+        }
+
+        .xp-theme .header h1 {
+            color: #003d82;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+            font-weight: 700;
+        }
+
+        .xp-theme .header h2 {
+            color: #333;
+        }
+
+        .xp-theme .status-badge {
+            background: linear-gradient(to bottom, #316ac5 0%, #1e5bb8 100%);
+            color: white;
+            border: 1px solid #1e5bb8;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+        }
+
+        .xp-theme .section-title {
+            color: #003d82;
+            border-bottom: 2px solid #aca899;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .xp-theme li {
+            background: linear-gradient(to bottom, #f8f6f0 0%, #e8e5d8 100%);
+            border: 2px solid;
+            border-color: #f2f0e6 #aca899 #aca899 #f2f0e6;
+            border-radius: 0;
+            box-shadow: inset 1px 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .xp-theme li:hover {
+            background: linear-gradient(to bottom, #fef9f0 0%, #f0eee0 100%);
+            transform: translateY(-1px);
+            box-shadow: 
+                inset 1px 1px 0 rgba(255,255,255,0.9),
+                0 3px 8px rgba(0,0,0,0.2);
+        }
+
+        .xp-theme .label {
+            color: #003d82;
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .xp-theme .value {
+            color: #333;
+        }
+
+        .xp-theme .footer {
+            color: #666;
+        }
+
+        .xp-theme .footer a {
+            color: #0066cc;
+        }
+
+        .xp-theme .theme-btn {
+            background: linear-gradient(to bottom, #316ac5 0%, #1e5bb8 100%);
+            color: white;
+            border: 2px solid;
+            border-color: #4a8dd8 #1e5bb8 #1e5bb8 #4a8dd8;
+            border-radius: 0;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .xp-theme .theme-btn:hover {
+            background: linear-gradient(to bottom, #4a8dd8 0%, #2d6bc7 100%);
+        }
+
+        .xp-theme .theme-btn.active {
+            background: linear-gradient(to bottom, #1e5bb8 0%, #316ac5 100%);
+            box-shadow: inset 1px 1px 3px rgba(0,0,0,0.3);
+        }
+
+        /* Windows Aero 主題 */
+        body.aero-theme {
+            background: linear-gradient(135deg, #1b2633 0%, #3a4b61 100%);
+            color: #e0e6f1;
+        }
+
+        .aero-theme .container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px) brightness(1.2);
+            -webkit-backdrop-filter: blur(10px) brightness(1.2);
+        }
+
+        .aero-theme .container::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: rotate(45deg);
+            z-index: -1;
+            filter: blur(20px);
+        }
+
+        .aero-theme .header h1 {
+            background: linear-gradient(135deg, #a8c0d9, #e0e6f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .aero-theme .header h2 {
+            color: #e0e6f1;
+        }
+
+        .aero-theme .status-badge {
+            background: rgba(114, 166, 233, 0.3);
+            color: #d1e2f8;
+            border: 1px solid rgba(114, 166, 233, 0.5);
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .aero-theme .section-title {
+            color: #72a6e9;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .aero-theme li {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .aero-theme li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(to bottom, #72a6e9, #a8c0d9);
+        }
+
+        .aero-theme li:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+
+        .aero-theme .label {
+            color: #72a6e9;
+        }
+
+        .aero-theme .value {
+            color: #e0e6f1;
+        }
+
+        .aero-theme .footer {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .aero-theme .footer a {
+            color: #72a6e9;
+        }
+
+        .aero-theme .theme-btn {
+            background: rgba(114, 166, 233, 0.2);
+            color: #e0e6f1;
+            border: 1px solid rgba(114, 166, 233, 0.4);
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+
+        .aero-theme .theme-btn:hover {
+            background: rgba(114, 166, 233, 0.3);
+            box-shadow: 0 4px 15px rgba(114, 166, 233, 0.2);
+        }
+
+        .aero-theme .theme-btn.active {
+            background: rgba(114, 166, 233, 0.4);
+            box-shadow: 0 0 20px rgba(114, 166, 233, 0.3);
+        }
+
+        /* Fluent Design (Windows 11) 主題 */
+        body.fluent-theme {
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 50%, #005a9e 100%);
+            color: #323130;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 400;
+        }
+
+        .fluent-theme .container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(40px) saturate(125%);
+            -webkit-backdrop-filter: blur(40px) saturate(125%);
+        }
+
+        .fluent-theme .header h1 {
+            color: #0078d4;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+        }
+
+        .fluent-theme .header h2 {
+            color: #605e5c;
+            font-weight: 400;
+        }
+
+        .fluent-theme .status-badge {
+            background: linear-gradient(135deg, #0078d4, #106ebe);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+        }
+
+        .fluent-theme .section-title {
+            color: #0078d4;
+            border-bottom: 2px solid #e1dfdd;
+            font-weight: 600;
+            letter-spacing: -0.2px;
+        }
+
+        .fluent-theme li {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            border-radius: 8px;
+            box-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.05),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+        }
+
+        .fluent-theme li:hover {
+            background: rgba(255, 255, 255, 0.85);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 
+                0 4px 16px rgba(0, 0, 0, 0.1),
+                0 0 0 1px rgba(0, 120, 212, 0.1);
+        }
+
+        .fluent-theme li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(to bottom, #0078d4, #106ebe);
+            border-radius: 0 4px 4px 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .fluent-theme li:hover::before {
+            opacity: 1;
+        }
+
+        .fluent-theme .label {
+            color: #0078d4;
+            font-weight: 600;
+        }
+
+        .fluent-theme .value {
+            color: #323130;
+        }
+
+        .fluent-theme .footer {
+            color: #605e5c;
+        }
+
+        .fluent-theme .footer a {
+            color: #0078d4;
+        }
+
+        .fluent-theme .theme-btn {
+            background: rgba(255, 255, 255, 0.8);
+            color: #0078d4;
+            border: 1px solid rgba(0, 120, 212, 0.2);
+            border-radius: 8px;
+            font-weight: 600;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .fluent-theme .theme-btn:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 
+                0 4px 16px rgba(0, 120, 212, 0.15),
+                0 0 0 2px rgba(0, 120, 212, 0.1);
+        }
+
+        .fluent-theme .theme-btn.active {
+            background: linear-gradient(135deg, #0078d4, #106ebe);
+            color: white;
+            transform: scale(1.1);
+            box-shadow: 
+                0 4px 16px rgba(0, 120, 212, 0.3),
+                0 0 0 2px rgba(0, 120, 212, 0.2);
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .theme-switcher {
+                bottom: 10px;
+                right: 10px;
+                gap: 6px;
+            }
+            
+            .theme-btn {
+                padding: 10px 12px;
+                font-size: 0.8em;
+            }
+            
+            .container {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body class="aero-theme">
+    <div class="container">
+        <div class="header">
+            <h1>{{ service_name }}</h1>
+            <h2>版本: {{ version }}</h2>
+            <span class="status-badge">運行中 🎯</span>
+        </div>
+
+        <h3 class="section-title">功能亮點</h3>
+        <ul>
+            {% for feature in features %}
+            <li>
+                <span class="value">{{ feature }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <h3 class="section-title">可用代理平台</h3>
+        <ul>
+            {% for platform_name, config in enabled_platforms.items() %}
+            <li>
+                <span class="label">平台名稱:</span> <span class="value">{{ config.display_name }}</span><br>
+                <span class="label">代理路徑:</span> <span class="value">/{{ platform_name }}{{ config.api_path }}/*</span>
+            </li>
+            {% endfor %}
+        </ul>
+        
+        {% if app_config.enable_gui %}
+        <h3 class="section-title">儀表板</h3>
+        <ul>
+            <li>
+                <span class="label">前往儀表板:</span> <span class="value"><a href="/dashboard">http://localhost:{{ app_config.port }}/dashboard</a></span>
+            </li>
+        </ul>
+        {% endif %}
+
+        <div class="footer">
+            &copy; 2025 AI Proxy Service. All rights reserved.
+        </div>
+    </div>
+
+    <div class="theme-switcher">
+        <button class="theme-btn" onclick="switchTheme('xp')">🖥️ XP</button>
+        <button class="theme-btn active" onclick="switchTheme('aero')">💎 Aero</button>
+        <button class="theme-btn" onclick="switchTheme('fluent')">✨ Win11</button>
+    </div>
+
+    <script>
+        // 主題切換功能
+        function switchTheme(theme) {
+            const body = document.body;
+            const buttons = document.querySelectorAll('.theme-btn');
+            
+            // 移除所有主題類別
+            body.className = '';
+            
+            // 移除所有按鈕的 active 狀態
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // 應用新主題
+            body.classList.add(theme + '-theme');
+            
+            // 設置對應按鈕為 active
+            const activeBtn = Array.from(buttons).find(btn => 
+                btn.onclick.toString().includes(`'${theme}'`)
+            );
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+            
+            // 保存主題偏好到 localStorage (如果支援的話)
+            try {
+                localStorage.setItem('preferred-theme', theme);
+            } catch(e) {
+                // 靜默處理 localStorage 錯誤
+            }
+            
+            // 添加切換動畫效果
+            body.style.transform = 'scale(0.98)';
+            setTimeout(() => {
+                body.style.transform = 'scale(1)';
+            }, 150);
+        }
+        
+        // 頁面載入時恢復主題偏好
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const savedTheme = localStorage.getItem('preferred-theme');
+                if (savedTheme) {
+                    switchTheme(savedTheme);
+                }
+            } catch(e) {
+                // 如果無法存取 localStorage，使用預設主題 (Aero)
+                switchTheme('aero');
+            }
+        });
+        
+        // 鍵盤快捷鍵支援
+        document.addEventListener('keydown', function(e) {
+            if (e.altKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        switchTheme('xp');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        switchTheme('aero');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        switchTheme('fluent');
+                        break;
+                }
+            }
+        });
+        
+        // 頁面載入完成後的歡迎動畫
+        window.addEventListener('load', function() {
+            const container = document.querySelector('.container');
+            container.style.animation = 'none';
+            container.offsetHeight; // 觸發重繪
+            container.style.animation = 'fadeIn 1s ease-out';
+        });
+    </script>
+</body>
+</html>
