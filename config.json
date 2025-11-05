@@ -1,0 +1,9 @@
+{
+    "enable_gui": true,
+    "enable_json": true,
+    "enable_key_validation": true,
+    "restrict_ip": false,
+    "allowed_ips": ["192.168.1.0/24", "10.0.0.0/8"],
+    "unhealthy_key_retry_minutes": 60,
+    "port": 5000
+}

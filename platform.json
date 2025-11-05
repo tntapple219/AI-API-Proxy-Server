@@ -1,0 +1,62 @@
+[
+    {
+        "name": "openrouter",
+        "display_name": "OpenRouter",
+        "base_url": "https://openrouter.ai",
+        "api_path": "/api/v1",
+        "auth_header": "Authorization",
+        "auth_format": "Bearer {key}",
+        "health_check_endpoint": "/api/v1/models",
+        "health_check_method": "GET",
+        "enabled": true,
+        "keys": [
+            "OPENROUTER_KEY_1",
+            "OPENROUTER_KEY_2",
+            "OPENROUTER_KEY_3",
+            "OPENROUTER_KEY_4",
+            "OPENROUTER_KEY_5"
+        ]
+    },
+    {
+        "name": "google",
+        "display_name": "Google AI Studio",
+        "base_url": "https://generativelanguage.googleapis.com",
+        "api_path": "/v1beta/openai",
+        "auth_header": "Authorization",
+        "auth_format": "Bearer {key}",
+        "health_check_endpoint": "/v1beta/openai/models",
+        "health_check_method": "GET",
+        "enabled": true,
+        "keys": [
+            "GOOGLE_KEY_1",
+            "GOOGLE_KEY_2",
+            "GOOGLE_KEY_3",
+            "GOOGLE_KEY_4",
+            "GOOGLE_KEY_5"
+        ]
+    },
+    {
+        "name": "openai",
+        "display_name": "OpenAI API",
+        "base_url": "https://api.openai.com",
+        "api_path": "/v1",
+        "auth_header": "Authorization",
+        "auth_format": "Bearer {key}",
+        "health_check_endpoint": "/v1/models",
+        "health_check_method": "GET",
+        "enabled": true,
+        "keys": ["OPENAI_KEY"]
+    },
+    {
+        "name": "stima",
+        "display_name": "Stima API",
+        "base_url": "https://api.stima.tech",
+        "api_path": "/v1",
+        "auth_header": "Authorization",
+        "auth_format": "Bearer {key}",
+        "health_check_endpoint": "/v1/models",
+        "health_check_method": "GET",
+        "enabled": true,
+        "keys": ["STIMA_KEY"]
+    }
+]

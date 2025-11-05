@@ -1,0 +1,12 @@
+[
+    {
+        "key": "root_key",
+        "is_root": true,
+        "daily_limit": 0,
+        "hourly_limit": 0,
+        "cooldown_seconds": 0,
+        "expiry_date": "0",
+        "enable_platform_whitelist": false,
+        "platform_whitelist": []
+    }
+]
