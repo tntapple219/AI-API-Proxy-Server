@@ -1,0 +1,12 @@
+# .env.example
+# This file lists environment variables that can be used by the AI Proxy Server.
+# Create a copy of this file named ".env" and fill in your actual API keys.
+
+# OpenRouter API Keys (if configured in platform.json)
+OPENROUTER_API_KEY_1="sk-or-v1-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+OPENROUTER_API_KEY_2="sk-or-v1-yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+
+# OpenAI API Key (if configured in platform.json)
+OPENAI_API_KEY="sk-zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+
+# Add other API keys for platforms as needed, matching the names in platform.json's "keys" array.
